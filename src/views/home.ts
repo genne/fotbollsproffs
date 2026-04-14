@@ -27,6 +27,22 @@ export function renderHome(root: HTMLElement): void {
   const active = state.activeSession;
   const pct = f.progressPct;
 
+  const paceLabel: Record<typeof f.paceSource, string> = {
+    plan: 'från plan',
+    recent: 'senaste 4 v',
+    estimate: 'från onboarding',
+    none: '—',
+  };
+
+  let etaLine = '';
+  if (f.etaDate) {
+    const years = (f.weeksToGoal ?? 0) / 52;
+    const when = f.etaDate.toLocaleDateString('sv-SE', { year: 'numeric', month: 'long' });
+    etaLine = `Du når målet <strong>${when}</strong> · om ${years.toFixed(1)} år · ${f.hoursPerWeekUsed.toFixed(1)} h/v (${paceLabel[f.paceSource]})`;
+  } else {
+    etaLine = 'Lägg till en plan eller logga träning för att se ETA';
+  }
+
   root.innerHTML = `
     <div class="brand">
       <div class="brand-logo">
@@ -58,6 +74,10 @@ export function renderHome(root: HTMLElement): void {
         <div class="hero-bar-fill" style="width:${pct.toFixed(1)}%;"></div>
       </div>
       <p class="hero-pct">${pct.toFixed(1)}% – ${motivate(pct)}</p>
+      <div style="margin-top:12px; padding-top:12px; border-top:1px solid rgba(255,255,255,0.1);">
+        <p class="hero-kicker" style="margin:0 0 2px;">Prognos</p>
+        <p style="color:#fff; font-size:13px; font-weight:500; margin:0; line-height:1.5;">${etaLine}</p>
+      </div>
     </div>
 
     <div class="timer-card" id="timer-card">
@@ -80,8 +100,8 @@ export function renderHome(root: HTMLElement): void {
       <div class="stat"><span class="muted">Starttimmar (uppskattat)</span><span>${formatHours(f.priorHours)} h</span></div>
       <div class="stat"><span class="muted">Loggad träning</span><span>${formatHours(f.loggedHours)} h</span></div>
       <div class="stat"><span class="muted">Timmar kvar</span><span>${formatHours(f.remainingHours)} h</span></div>
-      <div class="stat"><span class="muted">Veckotempo (${state.forecastSource === 'plan' ? 'från plan' : 'senaste 4v'})</span><span>${f.hoursPerWeekUsed.toFixed(1)} h/v</span></div>
-      <div class="stat"><span class="muted">Målet nås</span><span>${f.etaDate ? formatDate(f.etaDate) : 'lägg till plan eller träning'}</span></div>
+      <div class="stat"><span class="muted">Veckotempo (${paceLabel[f.paceSource]})</span><span>${f.hoursPerWeekUsed.toFixed(1)} h/v</span></div>
+      <div class="stat"><span class="muted">Målet nås</span><span>${f.etaDate ? formatDate(f.etaDate) : '—'}</span></div>
     </div>
 
     <div class="card">

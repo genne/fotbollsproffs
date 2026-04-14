@@ -1,4 +1,7 @@
 import type { AppState, PlanEntry, TrainingSession } from './types';
+import { weeklyHoursFromAnswers } from './estimator';
+
+export type ForecastPaceSource = 'plan' | 'recent' | 'estimate' | 'none';
 
 export type Forecast = {
   totalHours: number;
@@ -7,7 +10,9 @@ export type Forecast = {
   remainingHours: number;
   hoursPerWeekPlan: number;
   hoursPerWeekRecent: number;
+  hoursPerWeekEstimate: number;
   hoursPerWeekUsed: number;
+  paceSource: ForecastPaceSource;
   etaDate?: Date;
   weeksToGoal?: number;
   progressPct: number;
@@ -36,9 +41,20 @@ export function computeForecast(state: AppState): Forecast {
 
   const hoursPerWeekPlan = planHoursPerWeek(state.plan);
   const hoursPerWeekRecent = recentHoursPerWeek(state.sessions);
+  const hoursPerWeekEstimate = state.priorEstimate
+    ? weeklyHoursFromAnswers(state.priorEstimate.answers)
+    : 0;
 
-  const hoursPerWeekUsed =
+  const preferred =
     state.forecastSource === 'plan' ? hoursPerWeekPlan : hoursPerWeekRecent;
+
+  let hoursPerWeekUsed = preferred;
+  let paceSource: ForecastPaceSource = state.forecastSource;
+  if (hoursPerWeekUsed <= 0 && hoursPerWeekEstimate > 0) {
+    hoursPerWeekUsed = hoursPerWeekEstimate;
+    paceSource = 'estimate';
+  }
+  if (hoursPerWeekUsed <= 0) paceSource = 'none';
 
   let etaDate: Date | undefined;
   let weeksToGoal: number | undefined;
@@ -59,7 +75,9 @@ export function computeForecast(state: AppState): Forecast {
     remainingHours,
     hoursPerWeekPlan,
     hoursPerWeekRecent,
+    hoursPerWeekEstimate,
     hoursPerWeekUsed,
+    paceSource,
     etaDate,
     weeksToGoal,
     progressPct,
