@@ -11,72 +11,93 @@ import type { Category } from '../types';
 
 let timerInterval: number | undefined;
 
+function motivate(p: number): string {
+  if (p < 5) return 'Resan börjar nu!';
+  if (p < 15) return 'Bra start!';
+  if (p < 25) return 'Håll i det!';
+  if (p < 40) return 'Du är grym!';
+  if (p < 60) return 'Halvvägs mot proffs!';
+  if (p < 80) return 'Nästan proffs!';
+  return 'LEGENDARISK!';
+}
+
 export function renderHome(root: HTMLElement): void {
   const state = getState();
   const f = computeForecast(state);
   const active = state.activeSession;
-
-  const radius = 92;
-  const circumference = 2 * Math.PI * radius;
-  const offset = circumference * (1 - f.progressPct / 100);
+  const pct = f.progressPct;
 
   root.innerHTML = `
-    <section class="card">
-      <div class="progress-wrap">
-        <div class="progress-ring">
-          <svg width="220" height="220">
-            <circle class="track" cx="110" cy="110" r="${radius}" fill="none" stroke-width="14" />
-            <circle class="bar" cx="110" cy="110" r="${radius}" fill="none" stroke-width="14"
-              stroke-dasharray="${circumference}"
-              stroke-dashoffset="${offset}"
-              stroke-linecap="round" />
-          </svg>
-        </div>
-        <div style="text-align:center; margin-top:-130px; margin-bottom:70px;">
-          <div class="big-number">${formatHours(f.totalHours)}</div>
-          <div class="muted small">av ${state.goalHours.toLocaleString('sv-SE')} h</div>
-          <div class="muted small">${f.progressPct.toFixed(1)}%</div>
-        </div>
+    <div class="brand">
+      <div class="brand-logo">
+        <svg width="26" height="26" viewBox="0 0 32 32" fill="none">
+          <circle cx="16" cy="16" r="13" fill="white" opacity="0.15"/>
+          <circle cx="16" cy="16" r="13" stroke="white" stroke-width="1.5" fill="none"/>
+          <polygon points="16,6 19.5,12 16,14.5 12.5,12" fill="white"/>
+          <polygon points="22.5,11 27,13.5 26,18.5 22.5,17" fill="white" opacity="0.85"/>
+          <polygon points="9.5,11 7,18.5 6,13.5 9.5,11" fill="white" opacity="0.85"/>
+          <polygon points="20,22 16,26 12,22 13,18 19,18" fill="white" opacity="0.85"/>
+        </svg>
       </div>
+      <div>
+        <h1>Fotbollsproffs</h1>
+        <p class="muted">Räkna dina timmar mot toppen</p>
+      </div>
+    </div>
 
+    <div class="hero">
+      <div class="deco-ring"></div>
+      <div class="deco-line"></div>
+      <p class="hero-kicker">Dina fotbollstimmar</p>
+      <div class="hero-total">
+        <span class="num">${Math.round(f.totalHours).toLocaleString('sv-SE')}</span>
+        <span class="unit">h</span>
+      </div>
+      <p class="hero-sub">Vägen mot proffs · ${state.goalHours.toLocaleString('sv-SE')}h</p>
+      <div class="hero-bar-bg">
+        <div class="hero-bar-fill" style="width:${pct.toFixed(1)}%;"></div>
+      </div>
+      <p class="hero-pct">${pct.toFixed(1)}% – ${motivate(pct)}</p>
+    </div>
+
+    <div class="timer-card" id="timer-card">
+      ${active
+        ? `
+          <p class="ft-label">Träning pågår</p>
+          <div class="live-timer" id="live-timer">${formatElapsed(active.startedAt)}</div>
+          <button class="danger big" id="stop-btn">Stoppa träning</button>
+          <button class="link" id="cancel-btn" style="margin-top:8px;">Avbryt utan att spara</button>
+        `
+        : `
+          <p class="ft-label">Dags att träna?</p>
+          <p class="small muted" style="margin:4px 0 12px;">Tryck när du börjar, och igen när du slutar.</p>
+          <button class="primary big" id="start-btn">Starta träning</button>
+        `}
+    </div>
+
+    <div class="card">
+      <h2>Översikt</h2>
       <div class="stat"><span class="muted">Starttimmar (uppskattat)</span><span>${formatHours(f.priorHours)} h</span></div>
       <div class="stat"><span class="muted">Loggad träning</span><span>${formatHours(f.loggedHours)} h</span></div>
       <div class="stat"><span class="muted">Timmar kvar</span><span>${formatHours(f.remainingHours)} h</span></div>
       <div class="stat"><span class="muted">Veckotempo (${state.forecastSource === 'plan' ? 'från plan' : 'senaste 4v'})</span><span>${f.hoursPerWeekUsed.toFixed(1)} h/v</span></div>
       <div class="stat"><span class="muted">Målet nås</span><span>${f.etaDate ? formatDate(f.etaDate) : 'lägg till plan eller träning'}</span></div>
-    </section>
+    </div>
 
-    <section class="card" id="timer-card">
-      ${active
-        ? `
-          <h2>Träning pågår</h2>
-          <div class="live-timer" id="live-timer">${formatElapsed(active.startedAt)}</div>
-          <div class="row" style="justify-content:center;">
-            <button class="danger big" id="stop-btn">Stoppa träning</button>
-          </div>
-          <button class="ghost" id="cancel-btn" style="width:100%; margin-top:8px;">Avbryt utan att spara</button>
-        `
-        : `
-          <h2>Dags att träna?</h2>
-          <p>Tryck när du börjar, och igen när du slutar.</p>
-          <button class="primary big" id="start-btn">Starta träning</button>
-        `}
-    </section>
-
-    <section class="card">
+    <div class="card">
       <h2>Senaste sessioner</h2>
       ${state.sessions.length === 0
-        ? '<p>Inga sessioner än. Starta din första träning!</p>'
+        ? '<p class="muted small">Inga sessioner än. Starta din första träning!</p>'
         : state.sessions.slice(0, 5).map((s) => `
             <div class="session">
               <div>
                 <div>${s.category ?? 'Träning'}</div>
-                <div class="muted small">${new Date(s.startedAt).toLocaleString('sv-SE')}</div>
+                <div class="when">${new Date(s.startedAt).toLocaleString('sv-SE')}</div>
               </div>
               <div><strong>${s.minutes} min</strong></div>
             </div>
           `).join('')}
-    </section>
+    </div>
   `;
 
   const startBtn = root.querySelector<HTMLButtonElement>('#start-btn');
@@ -110,8 +131,8 @@ function openStopDialog(root: HTMLElement) {
   let chosen: Category | undefined;
   dlg.innerHTML = `
     <h2>Bra jobbat! Vad tränade du?</h2>
-    <p class="small">Valfritt – tryck Spara för att avsluta.</p>
-    <div class="row wrap" style="gap:6px; margin-bottom:12px;">
+    <p class="small muted">Valfritt – tryck Spara för att avsluta.</p>
+    <div class="row wrap" style="gap:6px; margin: 10px 0;">
       ${CATEGORIES.map((c) => `<span class="chip" data-c="${c}">${c}</span>`).join('')}
     </div>
     <div class="field">

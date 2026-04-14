@@ -2,6 +2,10 @@ import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig({
+  server: {
+    host: true,
+    allowedHosts: ['mac-studio', 'mac-studio.local', '.local'],
+  },
   plugins: [
     VitePWA({
       registerType: 'autoUpdate',

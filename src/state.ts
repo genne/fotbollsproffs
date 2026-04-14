@@ -16,6 +16,11 @@ export function setState(updater: (s: AppState) => AppState): void {
   listeners.forEach((l) => l(state));
 }
 
+export function setStateQuiet(updater: (s: AppState) => AppState): void {
+  state = updater(state);
+  save(state);
+}
+
 export function replaceState(next: AppState): void {
   state = next;
   save(state);
