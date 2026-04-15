@@ -89,10 +89,25 @@ export function renderHome(root: HTMLElement): void {
           <button class="link" id="cancel-btn" style="margin-top:8px;">Avbryt utan att spara</button>
         `
         : `
-          <p class="ft-label">Dags att träna?</p>
-          <p class="small muted" style="margin:4px 0 12px;">Tryck när du börjar, och igen när du slutar.</p>
-          <button class="primary big" id="start-btn">Starta träning</button>
-          <button class="link" id="manual-btn" style="margin-top:8px;">+ Logga pass jag redan gjort</button>
+          <p class="ft-label">Logga träning</p>
+          <p class="small muted" style="margin:4px 0 14px;">Lägg till ett pass du redan gjort, eller starta en live-timer.</p>
+          <button class="primary big" id="manual-btn">
+            <span style="display:inline-flex; align-items:center; justify-content:center; gap:8px;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="flex-shrink:0;">
+                <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+              </svg>
+              Logga pass
+            </span>
+          </button>
+          <button class="ghost big" id="start-btn" style="margin-top:8px;">
+            <span style="display:inline-flex; align-items:center; justify-content:center; gap:8px;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style="flex-shrink:0;">
+                <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/>
+                <path d="M12 7v5l3 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+              Starta live-timer
+            </span>
+          </button>
         `}
     </div>
 

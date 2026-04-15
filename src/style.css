@@ -247,8 +247,11 @@ button.danger {
 }
 button.ghost {
   background: transparent;
-  border-color: var(--color-border-tertiary);
-  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border-tertiary);
+  color: var(--color-text-primary);
+}
+button.ghost:hover {
+  background: var(--color-background-secondary);
 }
 button.big {
   display: block; width: 100%; padding: 18px;
