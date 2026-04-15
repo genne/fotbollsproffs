@@ -12,7 +12,7 @@ export default defineConfig({
       includeAssets: ['favicon.svg', 'icon-192.png', 'icon-512.png'],
       manifest: {
         name: 'Fotbollsproffs',
-        short_name: 'Fotboll',
+        short_name: 'Fotbollsproffs',
         description: 'Logga din fotbollsträning och nå 10 000 timmar.',
         theme_color: '#0f1a12',
         background_color: '#0f1a12',
