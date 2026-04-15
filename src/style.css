@@ -47,7 +47,7 @@ body {
   width: 100%;
   max-width: var(--maxw);
   margin: 0 auto;
-  padding: 16px 16px 96px 16px;
+  padding: calc(16px + env(safe-area-inset-top)) 16px 96px 16px;
 }
 
 h1, h2, h3 { margin: 0 0 10px 0; font-weight: 700; color: var(--color-text-primary); }
