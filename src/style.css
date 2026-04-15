@@ -186,6 +186,41 @@ input[type="range"] { width: 100%; accent-color: var(--color-accent); }
   padding: 3px 10px; border-radius: 20px;
 }
 
+.field-slider { margin-bottom: 4px; }
+.slider-top {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 6px;
+}
+.slider-value {
+  font-size: 15px; font-weight: 500;
+  color: var(--color-text-primary);
+  background: var(--color-background-secondary);
+  padding: 2px 12px; border-radius: 20px;
+  min-width: 32px; text-align: center;
+}
+.slider-marks {
+  display: flex; justify-content: space-between;
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  margin-top: 2px;
+}
+
+.duration-pickers {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 6px;
+}
+.duration-pickers select {
+  padding: 10px 10px;
+  font-size: 16px;
+  appearance: none;
+  -webkit-appearance: none;
+  background-color: var(--color-background-primary);
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' stroke='%236b7266' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 32px;
+  font-weight: 500;
+}
+
 /* Buttons */
 button, .btn {
   font: inherit;

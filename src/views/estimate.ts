@@ -16,6 +16,50 @@ function formatNum(n: number): string {
   return Math.round(n).toLocaleString('sv-SE');
 }
 
+function sliderField(
+  k: keyof PriorEstimateAnswers,
+  label: string,
+  max: number,
+  value: number,
+): string {
+  const v = Math.min(max, Math.max(0, Math.round(value)));
+  return `
+    <div class="field-slider">
+      <div class="slider-top">
+        <p class="ft-label" style="margin:0;">${label}</p>
+        <span class="slider-value" id="sv-${k}">${v}</span>
+      </div>
+      <input type="range" min="0" max="${max}" step="1" value="${v}" data-k="${k}" />
+      <div class="slider-marks"><span>0</span><span>${max}</span></div>
+    </div>`;
+}
+
+function durationField(
+  k: keyof PriorEstimateAnswers,
+  label: string,
+  value: number,
+  maxHours: number,
+): string {
+  const h = Math.min(maxHours, Math.floor(value / 60));
+  const m = Math.round((value % 60) / 15) * 15;
+  const mm = m === 60 ? 0 : m;
+  const hh = m === 60 ? h + 1 : h;
+  const hourOptions = Array.from({ length: maxHours + 1 }, (_, i) => i)
+    .map((x) => `<option value="${x}" ${x === hh ? 'selected' : ''}>${x} h</option>`)
+    .join('');
+  const minOptions = [0, 15, 30, 45]
+    .map((x) => `<option value="${x}" ${x === mm ? 'selected' : ''}>${x.toString().padStart(2, '0')} min</option>`)
+    .join('');
+  return `
+    <div>
+      <p class="ft-label">${label}</p>
+      <div class="duration-pickers" data-duration="${k}">
+        <select data-dur-h>${hourOptions}</select>
+        <select data-dur-m>${minOptions}</select>
+      </div>
+    </div>`;
+}
+
 export function renderEstimate(root: HTMLElement, onDone: () => void): void {
   const existing = getState().priorEstimate?.answers;
   let a: PriorEstimateAnswers = existing ? { ...existing } : { ...DEFAULT_ANSWERS };
@@ -36,9 +80,6 @@ export function renderEstimate(root: HTMLElement, onDone: () => void): void {
           <polygon points="22.5,11 27,13.5 26,18.5 22.5,17" fill="white" opacity="0.85"/>
           <polygon points="9.5,11 7,18.5 6,13.5 9.5,11" fill="white" opacity="0.85"/>
           <polygon points="20,22 16,26 12,22 13,18 19,18" fill="white" opacity="0.85"/>
-          <line x1="16" y1="14.5" x2="16" y2="18" stroke="white" stroke-width="1" opacity="0.5"/>
-          <line x1="19.5" y1="12" x2="22.5" y2="11" stroke="white" stroke-width="1" opacity="0.5"/>
-          <line x1="12.5" y1="12" x2="9.5" y2="11" stroke="white" stroke-width="1" opacity="0.5"/>
         </svg>
       </div>
       <div>
@@ -60,20 +101,20 @@ export function renderEstimate(root: HTMLElement, onDone: () => void): void {
         <div class="hero-bar-fill" id="progress-bar"></div>
       </div>
       <p class="hero-pct" id="progress-pct">0.0% – Resan börjar nu!</p>
-      <div class="hero-eta" id="hero-eta" style="margin-top:12px; padding-top:12px; border-top:1px solid rgba(255,255,255,0.1);">
+      <div style="margin-top:12px; padding-top:12px; border-top:1px solid rgba(255,255,255,0.1);">
         <p class="hero-kicker" style="margin:0 0 2px;">Om du fortsätter i samma tempo</p>
-        <p class="hero-eta-text" id="eta-text" style="color:#fff; font-size:14px; font-weight:500; margin:0;">—</p>
+        <p id="eta-text" style="color:#fff; font-size:14px; font-weight:500; margin:0;">—</p>
       </div>
     </div>
 
     <div class="pair-grid">
       <div class="ft-card">
         <p class="ft-label">Ålder nu</p>
-        <input class="ft-input" type="number" data-k="ageNow" min="5" max="60" value="${a.ageNow}" />
+        <input class="ft-input" type="number" inputmode="numeric" data-k="ageNow" min="5" max="60" value="${a.ageNow}" />
       </div>
       <div class="ft-card">
         <p class="ft-label">Började spela vid</p>
-        <input class="ft-input" type="number" data-k="ageStart" min="2" max="30" value="${a.ageStart}" />
+        <input class="ft-input" type="number" inputmode="numeric" data-k="ageStart" min="2" max="30" value="${a.ageStart}" />
       </div>
     </div>
 
@@ -88,15 +129,9 @@ export function renderEstimate(root: HTMLElement, onDone: () => void): void {
         <p class="ft-cat-title">Organiserad träning</p>
         <span class="ft-hours-badge" id="org-h" style="color:#2D5E0F;">0 h</span>
       </div>
-      <div class="ft-card-pair">
-        <div>
-          <p class="ft-label">Träningar / vecka</p>
-          <input class="ft-input" type="number" data-k="trainingsPerWeek" min="0" max="14" value="${a.trainingsPerWeek}" />
-        </div>
-        <div>
-          <p class="ft-label">Min per träning</p>
-          <input class="ft-input" type="number" data-k="minPerTraining" min="0" max="240" value="${a.minPerTraining}" />
-        </div>
+      ${sliderField('trainingsPerWeek', 'Träningar / vecka', 7, a.trainingsPerWeek)}
+      <div style="margin-top:10px;">
+        ${durationField('minPerTraining', 'Längd per träning', a.minPerTraining, 3)}
       </div>
     </div>
 
@@ -112,15 +147,9 @@ export function renderEstimate(root: HTMLElement, onDone: () => void): void {
         <p class="ft-cat-title">Match</p>
         <span class="ft-hours-badge" id="match-h" style="color:#7A440C;">0 h</span>
       </div>
-      <div class="ft-card-pair">
-        <div>
-          <p class="ft-label">Matcher / månad</p>
-          <input class="ft-input" type="number" data-k="matchesPerMonth" min="0" max="30" value="${a.matchesPerMonth}" />
-        </div>
-        <div>
-          <p class="ft-label">Min per match</p>
-          <input class="ft-input" type="number" data-k="minPerMatch" min="0" max="120" value="${a.minPerMatch}" />
-        </div>
+      ${sliderField('matchesPerMonth', 'Matcher / månad', 12, a.matchesPerMonth)}
+      <div style="margin-top:10px;">
+        ${durationField('minPerMatch', 'Längd per match', a.minPerMatch, 2)}
       </div>
     </div>
 
@@ -135,15 +164,9 @@ export function renderEstimate(root: HTMLElement, onDone: () => void): void {
         <p class="ft-cat-title">På raster i skolan</p>
         <span class="ft-hours-badge" id="school-h" style="color:#1A5FA0;">0 h</span>
       </div>
-      <div class="ft-card-pair">
-        <div>
-          <p class="ft-label">Skoldagar / vecka</p>
-          <input class="ft-input" type="number" data-k="schoolDaysPerWeek" min="0" max="7" value="${a.schoolDaysPerWeek}" />
-        </div>
-        <div>
-          <p class="ft-label">Min per dag</p>
-          <input class="ft-input" type="number" data-k="minPerBreak" min="0" max="180" value="${a.minPerBreak}" />
-        </div>
+      ${sliderField('schoolDaysPerWeek', 'Skoldagar med fotboll', 5, a.schoolDaysPerWeek)}
+      <div style="margin-top:10px;">
+        ${durationField('minPerBreak', 'Tid per skoldag', a.minPerBreak, 2)}
       </div>
     </div>
 
@@ -157,15 +180,9 @@ export function renderEstimate(root: HTMLElement, onDone: () => void): void {
         <p class="ft-cat-title">Hemma / med kompisar</p>
         <span class="ft-hours-badge" id="home-h" style="color:#8F3455;">0 h</span>
       </div>
-      <div class="ft-card-pair">
-        <div>
-          <p class="ft-label">Dagar / vecka</p>
-          <input class="ft-input" type="number" data-k="homeDaysPerWeek" min="0" max="7" value="${a.homeDaysPerWeek}" />
-        </div>
-        <div>
-          <p class="ft-label">Min per gång</p>
-          <input class="ft-input" type="number" data-k="minPerHomeSession" min="0" max="240" value="${a.minPerHomeSession}" />
-        </div>
+      ${sliderField('homeDaysPerWeek', 'Dagar / vecka', 7, a.homeDaysPerWeek)}
+      <div style="margin-top:10px;">
+        ${durationField('minPerHomeSession', 'Tid per gång', a.minPerHomeSession, 3)}
       </div>
     </div>
 
@@ -175,7 +192,7 @@ export function renderEstimate(root: HTMLElement, onDone: () => void): void {
         <span class="season-value" id="season-v">${a.seasonFactor.toFixed(1)}</span>
       </div>
       <input type="range" data-k="seasonFactor" min="0.3" max="1" step="0.05" value="${a.seasonFactor}" />
-      <div style="display:flex; justify-content:space-between; font-size:11px; color:var(--color-text-secondary); margin-top:4px;">
+      <div class="slider-marks">
         <span>Uppehåll</span><span>Hela året</span>
       </div>
     </div>
@@ -222,18 +239,35 @@ export function renderEstimate(root: HTMLElement, onDone: () => void): void {
     }
   };
 
+  const updateFromK = (k: keyof PriorEstimateAnswers, v: number) => {
+    if (!Number.isFinite(v)) return;
+    a = { ...a, [k]: v };
+    if (k === 'seasonFactor') {
+      (root.querySelector('#season-v') as HTMLElement).textContent = v.toFixed(1);
+    }
+    const svEl = root.querySelector(`#sv-${k}`);
+    if (svEl) svEl.textContent = String(v);
+    recalc();
+    persist();
+  };
+
   root.querySelectorAll<HTMLInputElement>('input[data-k]').forEach((inp) => {
     inp.addEventListener('input', () => {
       const k = inp.dataset.k as keyof PriorEstimateAnswers;
-      const v = Number(inp.value);
-      if (!Number.isFinite(v)) return;
-      a = { ...a, [k]: v };
-      if (k === 'seasonFactor') {
-        (root.querySelector('#season-v') as HTMLElement).textContent = v.toFixed(1);
-      }
-      recalc();
-      persist();
+      updateFromK(k, Number(inp.value));
     });
+  });
+
+  root.querySelectorAll<HTMLElement>('[data-duration]').forEach((wrap) => {
+    const k = wrap.dataset.duration as keyof PriorEstimateAnswers;
+    const hSel = wrap.querySelector<HTMLSelectElement>('[data-dur-h]')!;
+    const mSel = wrap.querySelector<HTMLSelectElement>('[data-dur-m]')!;
+    const handler = () => {
+      const total = Number(hSel.value) * 60 + Number(mSel.value);
+      updateFromK(k, total);
+    };
+    hSel.addEventListener('change', handler);
+    mSel.addEventListener('change', handler);
   });
 
   root.querySelector<HTMLButtonElement>('#save')?.addEventListener('click', () => {
