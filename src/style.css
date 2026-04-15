@@ -301,11 +301,40 @@ nav.tabs button {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
+  gap: 3px;
   border-radius: 0;
+  position: relative;
+  font-weight: 500;
+  transition: color 0.15s ease;
 }
-nav.tabs button.active { color: var(--color-accent); }
-nav.tabs .tab-icon { font-size: 1.25rem; }
+nav.tabs button.active {
+  color: var(--color-accent);
+  font-weight: 600;
+}
+nav.tabs button.active::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 32px;
+  height: 3px;
+  background: var(--color-accent);
+  border-radius: 0 0 3px 3px;
+}
+nav.tabs .tab-icon {
+  font-size: 1.3rem;
+  width: 40px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  transition: background 0.15s ease;
+}
+nav.tabs button.active .tab-icon {
+  background: var(--color-accent-bg);
+}
 
 /* Stat rows */
 .stat { display: flex; justify-content: space-between; padding: 8px 0; font-size: 14px; }
