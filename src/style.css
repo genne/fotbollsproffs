@@ -39,7 +39,6 @@ body {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  padding-bottom: env(safe-area-inset-bottom);
 }
 
 #app {
@@ -47,7 +46,7 @@ body {
   width: 100%;
   max-width: var(--maxw);
   margin: 0 auto;
-  padding: calc(16px + env(safe-area-inset-top)) 16px 96px 16px;
+  padding: calc(16px + env(safe-area-inset-top)) 16px calc(72px + env(safe-area-inset-bottom)) 16px;
 }
 
 h1, h2, h3 { margin: 0 0 10px 0; font-weight: 700; color: var(--color-text-primary); }
@@ -290,7 +289,7 @@ nav.tabs {
   background: var(--color-background-primary);
   display: flex;
   justify-content: space-around;
-  padding: 6px 0 calc(6px + env(safe-area-inset-bottom)) 0;
+  padding: 4px 0 env(safe-area-inset-bottom) 0;
   border-top: 1px solid var(--color-border-tertiary);
   z-index: 10;
 }
@@ -299,7 +298,7 @@ nav.tabs button {
   background: transparent;
   color: var(--color-text-secondary);
   border: none;
-  padding: 6px 4px;
+  padding: 4px 4px 2px;
   font-size: 11px;
   display: flex;
   flex-direction: column;
@@ -326,13 +325,13 @@ nav.tabs button.active::before {
   border-radius: 0 0 3px 3px;
 }
 nav.tabs .tab-icon {
-  font-size: 1.3rem;
+  font-size: 1.2rem;
   width: 40px;
-  height: 28px;
+  height: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 12px;
+  border-radius: 10px;
   transition: background 0.15s ease;
 }
 nav.tabs button.active .tab-icon {
