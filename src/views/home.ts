@@ -1,4 +1,4 @@
-import { getState, setState } from '../state';
+import { getState, setState, uid } from '../state';
 import { computeForecast, formatDate, formatHours } from '../forecast';
 import {
   cancelSession,
@@ -7,7 +7,7 @@ import {
   stopSession,
 } from '../timer';
 import { CATEGORIES } from '../types';
-import type { Category } from '../types';
+import type { Category, TrainingSession } from '../types';
 
 let timerInterval: number | undefined;
 
@@ -92,6 +92,7 @@ export function renderHome(root: HTMLElement): void {
           <p class="ft-label">Dags att träna?</p>
           <p class="small muted" style="margin:4px 0 12px;">Tryck när du börjar, och igen när du slutar.</p>
           <button class="primary big" id="start-btn">Starta träning</button>
+          <button class="link" id="manual-btn" style="margin-top:8px;">+ Logga pass jag redan gjort</button>
         `}
     </div>
 
@@ -128,6 +129,9 @@ export function renderHome(root: HTMLElement): void {
 
   const stopBtn = root.querySelector<HTMLButtonElement>('#stop-btn');
   stopBtn?.addEventListener('click', () => openStopDialog(root));
+
+  const manualBtn = root.querySelector<HTMLButtonElement>('#manual-btn');
+  manualBtn?.addEventListener('click', () => openManualDialog(root));
 
   const cancelBtn = root.querySelector<HTMLButtonElement>('#cancel-btn');
   cancelBtn?.addEventListener('click', () => {
@@ -190,6 +194,92 @@ function openStopDialog(root: HTMLElement) {
         setState((s) => ({ ...s, activeSession: undefined }));
       }
     }
+    dlg.close();
+    dlg.remove();
+    renderHome(root);
+  });
+}
+
+function openManualDialog(root: HTMLElement) {
+  const dlg = document.createElement('dialog');
+  let chosen: Category | undefined;
+  let hours = 1;
+  let minutes = 0;
+
+  dlg.innerHTML = `
+    <h2>Logga ett pass</h2>
+    <p class="small muted">Vad gjorde du, och hur länge?</p>
+
+    <div style="margin:10px 0;">
+      <p class="ft-label">Typ av träning</p>
+      <div class="row wrap" style="gap:6px;">
+        ${CATEGORIES.map((c) => `<span class="chip" data-c="${c}">${c}</span>`).join('')}
+      </div>
+    </div>
+
+    <div style="margin:14px 0;">
+      <p class="ft-label">Längd</p>
+      <div class="duration-pickers">
+        <select id="dur-h">
+          ${Array.from({ length: 9 }, (_, i) => i).map((x) => `<option value="${x}" ${x === hours ? 'selected' : ''}>${x} h</option>`).join('')}
+        </select>
+        <select id="dur-m">
+          ${[0, 15, 30, 45].map((x) => `<option value="${x}" ${x === minutes ? 'selected' : ''}>${x.toString().padStart(2, '0')} min</option>`).join('')}
+        </select>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Anteckning (valfri)</label>
+      <textarea id="note" rows="2" placeholder="T.ex. skottövning vänsterfot"></textarea>
+    </div>
+
+    <div class="row" style="justify-content:flex-end; gap:8px;">
+      <button class="ghost" id="cancel">Avbryt</button>
+      <button class="primary" id="save">Spara pass</button>
+    </div>
+  `;
+  document.body.appendChild(dlg);
+  dlg.showModal();
+
+  dlg.querySelectorAll<HTMLSpanElement>('.chip').forEach((chip) => {
+    chip.addEventListener('click', () => {
+      dlg.querySelectorAll('.chip').forEach((c) => c.classList.remove('active'));
+      chip.classList.add('active');
+      chosen = chip.dataset.c as Category;
+    });
+  });
+
+  dlg.querySelector<HTMLSelectElement>('#dur-h')?.addEventListener('change', (e) => {
+    hours = Number((e.target as HTMLSelectElement).value);
+  });
+  dlg.querySelector<HTMLSelectElement>('#dur-m')?.addEventListener('change', (e) => {
+    minutes = Number((e.target as HTMLSelectElement).value);
+  });
+
+  dlg.querySelector<HTMLButtonElement>('#cancel')?.addEventListener('click', () => {
+    dlg.close();
+    dlg.remove();
+  });
+
+  dlg.querySelector<HTMLButtonElement>('#save')?.addEventListener('click', () => {
+    const totalMin = hours * 60 + minutes;
+    if (totalMin < 1) {
+      alert('Välj en längd först.');
+      return;
+    }
+    const note = dlg.querySelector<HTMLTextAreaElement>('#note')?.value.trim();
+    const endedAt = new Date();
+    const startedAt = new Date(endedAt.getTime() - totalMin * 60_000);
+    const session: TrainingSession = {
+      id: uid(),
+      startedAt: startedAt.toISOString(),
+      endedAt: endedAt.toISOString(),
+      minutes: totalMin,
+      category: chosen,
+      note: note || undefined,
+    };
+    setState((s) => ({ ...s, sessions: [session, ...s.sessions] }));
     dlg.close();
     dlg.remove();
     renderHome(root);
